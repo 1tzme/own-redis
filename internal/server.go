@@ -38,8 +38,10 @@ func (s *Server) Start() error {
 	}
 	defer conn.Close()
 
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 4096)
 	fmt.Printf("Server listening on %s\n", conn.LocalAddr().String())
+
+	s.expiredKeysCleanup()
 
 	for {
 		n, clientAddr, err := conn.ReadFromUDP(buffer)
@@ -78,4 +80,20 @@ func (s *Server) handleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, messa
 	if err != nil {
 		fmt.Printf("Error sending response to %v: %v\n", clientAddr, err)
 	}
+}
+
+func (s *Server) expiredKeysCleanup() {
+	ticker := time.NewTicker(1 * time.Second)
+	go func() {
+		for range ticker.C {
+			now := time.Now()
+			s.mu.Lock()
+			for key, entry := range s.data {
+				if !entry.Expiration.IsZero() && now.After(entry.Expiration) {
+					delete(s.data, key)
+				}
+			}
+			s.mu.Unlock()
+		}
+	}()
 }
