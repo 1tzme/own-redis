@@ -34,12 +34,12 @@ func (s *Server) Start() error {
 
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		return fmt.Errorf("failed to listen UDP: %w", err)
+		return fmt.Errorf("failed to listern UPD: %w", err)
 	}
 	defer conn.Close()
 
 	buffer := make([]byte, 4096)
-	fmt.Printf("Server listening on %s\n", conn.LocalAddr().String())
+	fmt.Printf("Server listening on %s\n", addr)
 
 	s.expiredKeysCleanup()
 
@@ -76,8 +76,7 @@ func (s *Server) handleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, messa
 		}
 	}
 
-	_, err := conn.WriteToUDP([]byte(response), clientAddr)
-	if err != nil {
+	if _, err := conn.WriteToUDP([]byte(response+"\n"), clientAddr); err != nil {
 		fmt.Printf("Error sending response to %v: %v\n", clientAddr, err)
 	}
 }
