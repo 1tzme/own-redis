@@ -14,9 +14,14 @@ func (s *Server) handleSet(args []string) string {
 	key := args[0]
 	value := args[1]
 	var expiration time.Time
+	hasPX := false
 
 	for i := 2; i < len(args); i++ {
-		if strings.ToUpper(args[i]) == "PX" {
+		arg := strings.ToUpper(args[i])
+		if arg == "PX" {
+			if hasPX {
+				return "(error) ERR PX already specified"
+			}
 			if i+1 >= len(args) {
 				return "(error) ERR syntax error"
 			}
@@ -27,6 +32,8 @@ func (s *Server) handleSet(args []string) string {
 			}
 			expiration = time.Now().Add(time.Duration(miliseconds) * time.Millisecond)
 			i++
+		} else if hasPX {
+			return "(error) ERR syntax error after PX"
 		} else {
 			value += " " + args[i]
 		}
