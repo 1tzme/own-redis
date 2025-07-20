@@ -65,7 +65,10 @@ func (s *Server) handleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, messa
 		switch command {
 		case "PING":
 			response = "PONG"
-		// add get, set handlers
+		case "SET":
+			response = s.handleSet(parts[1:])
+		case "GET":
+			response = s.handleGet(parts[1:])
 		default:
 			response = fmt.Sprintf("(error) ERR unknown command %s", parts[0])
 		}
